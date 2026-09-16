@@ -14,7 +14,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { Client, type Health } from "truegrain";
+import { Client, Unauthorized, type Health } from "truegrain";
 
 const URL_KEY = "truegrain.console.url";
 const TOKEN_KEY = "truegrain.console.token";
@@ -30,6 +30,12 @@ export interface Connection {
   health: Health | null;
   /** Why the last connection attempt failed, in the engine's own words. */
   problem: string;
+  /**
+   * Why the engine answered but will not show this caller the model, empty
+   * when it will. Health needs no credential, so an engine can be reachable
+   * and still refuse every request that matters.
+   */
+  blocked: string;
   /** True once health has come back. */
   live: boolean;
   /** True while a connection attempt is in flight. */
@@ -49,6 +55,7 @@ export function EngineProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState(() => sessionStorage.getItem(TOKEN_KEY) ?? "");
   const [health, setHealth] = useState<Health | null>(null);
   const [problem, setProblem] = useState("");
+  const [blocked, setBlocked] = useState("");
   const [checking, setChecking] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
@@ -69,20 +76,33 @@ export function EngineProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!client) {
       setHealth(null);
+      setBlocked("");
       return;
     }
     let current = true;
     setChecking(true);
+    // Two probes, because they answer two different questions. Health says
+    // the engine is there and describes what it enforces, and it answers
+    // without a credential. Reading the model is the first request that has
+    // to get past authentication, so it is the one that says whether this
+    // identity can actually use the engine it just reached.
     client
       .health()
-      .then((h) => {
+      .then(async (h) => {
         if (!current) return;
         setHealth(h);
         setProblem("");
+        try {
+          await client.metrics();
+          if (current) setBlocked("");
+        } catch (err) {
+          if (current) setBlocked(unreadable(err, token));
+        }
       })
       .catch((err: unknown) => {
         if (!current) return;
         setHealth(null);
+        setBlocked("");
         setProblem(describe(err));
       })
       .finally(() => {
@@ -91,6 +111,9 @@ export function EngineProvider({ children }: { children: ReactNode }) {
     return () => {
       current = false;
     };
+    // token is read inside, but the client is rebuilt whenever it changes, so
+    // depending on the client is depending on the token.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client, attempt]);
 
   const connect = useCallback((nextUrl: string, nextToken: string) => {
@@ -112,6 +135,7 @@ export function EngineProvider({ children }: { children: ReactNode }) {
     client,
     health,
     problem,
+    blocked,
     live: health !== null,
     checking,
     connect,
@@ -144,6 +168,22 @@ export function describe(err: unknown): string {
     if (e.message) return e.message;
   }
   return String(err);
+}
+
+/**
+ * Say why the model could not be read, in terms of what to do next.
+ *
+ * "Unauthorized" alone is ambiguous: an engine that wants a token you never
+ * gave it and an engine that rejected the token you did give it need
+ * different actions from you, and only one of them is worth retyping.
+ */
+function unreadable(err: unknown, token: string): string {
+  if (err instanceof Unauthorized) {
+    return token
+      ? "The engine did not accept that token, so it will not show you the model."
+      : "This engine requires a bearer token. Add one and connect again.";
+  }
+  return describe(err);
 }
 
 /** The caller the engine resolved this token to, when it says. */

@@ -16,6 +16,10 @@ export function Bar() {
   const engine = useEngine();
   const [open, setOpen] = useState(false);
   const caller = callerOf(engine.health);
+  // Reached is not the same as usable. Health answers without a credential, so
+  // an engine that then refuses the model would sit under a green light over
+  // an empty page, which is the one thing a status is there to prevent.
+  const usable = engine.live && !engine.blocked;
 
   return (
     <>
@@ -30,8 +34,8 @@ export function Bar() {
         </NavLink>
 
         <nav className="sections" aria-label="Sections">
-          <NavLink to="/explore" data-offline={String(!engine.live)}>Explore</NavLink>
-          <NavLink to="/model" data-offline={String(!engine.live)}>Model</NavLink>
+          <NavLink to="/explore" data-offline={String(!usable)}>Explore</NavLink>
+          <NavLink to="/model" data-offline={String(!usable)}>Model</NavLink>
           <NavLink to="/governance" data-offline={String(!engine.live)}>Governance</NavLink>
           <span className="rule" aria-hidden="true" />
           <NavLink to="/connect">Connect</NavLink>
@@ -42,15 +46,20 @@ export function Bar() {
 
         <button
           type="button"
-          className={engine.live ? "status live" : "status"}
+          className={usable ? "status live" : engine.blocked ? "status held" : "status"}
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
         >
           <span className="dot" aria-hidden="true" />
-          {engine.live ? (
+          {usable ? (
             <>
               <code>{short(engine.url)}</code>
               {caller ? <span>as {caller.subject}</span> : <span>not identified</span>}
+            </>
+          ) : engine.blocked ? (
+            <>
+              <code>{short(engine.url)}</code>
+              <span>needs a token</span>
             </>
           ) : engine.checking ? (
             <span>connecting</span>
@@ -115,9 +124,9 @@ function ConnectionPanel({ onDone }: { onDone: () => void }) {
           </div>
         </form>
 
-        {engine.problem && (
+        {(engine.problem || engine.blocked) && (
           <p className="note" style={{ color: "var(--grain)" }}>
-            {engine.problem}
+            {engine.problem || engine.blocked}
           </p>
         )}
         <p className="note">

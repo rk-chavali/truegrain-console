@@ -104,6 +104,10 @@ nav.sections a[data-offline="true"] { opacity: 0.5; }
 .status:hover { border-color: var(--edge); color: var(--text); }
 .status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--grain); flex: none; }
 .status.live .dot { background: var(--flow); }
+/* Reached but refusing. Amber, the colour a refusal gets, because this is the
+   engine declining rather than failing. */
+.status.held { border-color: var(--grain); color: var(--grain); }
+.status.held .dot { background: var(--grain); }
 .status code { font-family: var(--mono); font-size: 0.75rem; color: var(--text); }
 
 /* ── layout ────────────────────────────────────────────────────────────── */

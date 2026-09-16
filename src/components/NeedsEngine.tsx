@@ -5,9 +5,10 @@ import { useEngine } from "../lib/engine";
  * What a page shows when there is no engine to read.
  *
  * An empty screen is an invitation to act rather than a place to apologise,
- * so this names the one thing missing and where to fix it. It distinguishes
- * "you have not said which engine" from "the engine you named did not
- * answer", because those need different actions from the reader.
+ * so this names the one thing missing and where to fix it. It separates the
+ * three cases, because each needs a different action: you have not said which
+ * engine, the engine you named did not answer, or it answered and will not
+ * let this identity read the model.
  */
 export function NeedsEngine() {
   const engine = useEngine();
@@ -15,7 +16,20 @@ export function NeedsEngine() {
   return (
     <div className="page">
       <section className="panel invite">
-        {engine.url ? (
+        {engine.blocked ? (
+          <>
+            <h2>The engine will not show you the model</h2>
+            <p>{engine.blocked}</p>
+            <p>
+              Open the connection button in the bar to set a token. The engine takes it
+              from <code>-token-env</code> or verifies it against your identity provider,
+              so the value is whatever that deployment was started with.
+            </p>
+            <button className="btn primary" type="button" onClick={engine.refresh}>
+              Try again
+            </button>
+          </>
+        ) : engine.url ? (
           <>
             <h2>That engine did not answer</h2>
             <p>{engine.problem || `Nothing responded at ${engine.url}.`}</p>

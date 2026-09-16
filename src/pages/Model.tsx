@@ -22,7 +22,7 @@ export function Model() {
 
   const client = engine.client;
   useEffect(() => {
-    if (!client || !engine.live) return;
+    if (!client || !engine.live || engine.blocked) return;
     let current = true;
     Promise.all([client.metrics(), client.dimensions(), client.namespaces()])
       .then(([m, d, n]) => {
@@ -35,7 +35,7 @@ export function Model() {
     return () => {
       current = false;
     };
-  }, [client, engine.live]);
+  }, [client, engine.live, engine.blocked]);
 
   const lower = term.trim().toLowerCase();
   const shownMetrics = useMemo(
@@ -47,7 +47,7 @@ export function Model() {
     [dimensions, lower],
   );
 
-  if (!engine.live) return <NeedsEngine />;
+  if (!engine.live || engine.blocked) return <NeedsEngine />;
 
   return (
     <div className="page">

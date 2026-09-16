@@ -67,7 +67,7 @@ export function Explore() {
 
   // Load the model once there is an engine to read it from.
   useEffect(() => {
-    if (!client || !engine.live) return;
+    if (!client || !engine.live || engine.blocked) return;
     let current = true;
     Promise.all([client.metrics(), client.dimensions()])
       .then(([m, d]) => {
@@ -85,7 +85,7 @@ export function Explore() {
     };
     // chosenMetrics is deliberately not a dependency: this seeds it once.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, engine.live]);
+  }, [client, engine.live, engine.blocked]);
 
   const legalDims = useMemo(() => {
     if (chosenMetrics.length === 0) return [];
@@ -160,7 +160,7 @@ export function Explore() {
     void run();
   }, [run]);
 
-  if (!engine.live) return <NeedsEngine />;
+  if (!engine.live || engine.blocked) return <NeedsEngine />;
 
   const levels = levelsFor(chosenDims, legalDims, refusal);
   const matches = (name: string, text: string, term: string) =>
