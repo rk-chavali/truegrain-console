@@ -290,3 +290,111 @@ td.num { text-align: right; font-family: var(--mono); color: var(--flow); paddin
   .split { grid-template-columns: 1fr; }
   .rail { position: static; max-height: none; }
 }
+
+/* ── the record: refusals, activity, spend ─────────────────────────────── */
+
+/* A refusal is the engine working, so it is amber throughout and never red.
+   Red would make a healthy engine look like an incident and teach whoever
+   watches this to stop looking. */
+.refusal { border-left: 3px solid var(--grain); }
+
+.refusal-head {
+  display: flex; align-items: center; gap: 0.7rem;
+  margin-bottom: 1rem; flex-wrap: wrap;
+}
+.refusal-code {
+  font-family: var(--mono); font-size: 0.8rem;
+  color: var(--grain); background: var(--grain-wash);
+  padding: 0.2rem 0.5rem; border-radius: 6px;
+}
+
+/* The retry class is the structural device: the colour says whether there is
+   anything you can do, so it carries information rather than decoration. */
+.retry {
+  font-size: 0.72rem; letter-spacing: 0.02em;
+  padding: 0.15rem 0.45rem; border-radius: 5px; border: 1px solid transparent;
+}
+.retry-modify { color: var(--grain); border-color: var(--grain-dim); }
+.retry-later  { color: var(--text-dim); border-color: var(--line); }
+.retry-never  { color: var(--text-dim); border-color: var(--edge); }
+.retry-unknown { color: var(--text-dim); border-color: var(--line); }
+
+.who { color: var(--text-dim); font-size: 0.8rem; }
+
+/* Asked beside answered. A refusal that only says no is an error message; the
+   half that names what does answer is the half worth reading, so it gets
+   equal width rather than a footnote. */
+.refusal-body {
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap);
+}
+@media (max-width: 760px) { .refusal-body { grid-template-columns: 1fr; } }
+
+.refusal-body h3 {
+  font-size: 0.8rem; font-weight: 600; color: var(--text-dim);
+  margin: 0 0 0.6rem;
+}
+.answers { border-left: 1px solid var(--line); padding-left: var(--gap); }
+@media (max-width: 760px) {
+  .answers { border-left: 0; border-top: 1px solid var(--line); padding: var(--gap) 0 0; }
+}
+
+.fields { list-style: none; padding: 0; margin: 0 0 0.9rem; }
+.fields li { margin-bottom: 0.25rem; }
+.fields .by { color: var(--text-dim); font-size: 0.85rem; }
+.reason { color: var(--text-dim); margin: 0; line-height: 1.55; }
+
+/* Five decisions, kept apart. The difference between them is the difference
+   between an access problem, a modelling problem and an outage. */
+.decision {
+  font-family: var(--mono); font-size: 0.75rem;
+  padding: 0.12rem 0.4rem; border-radius: 5px;
+}
+.decision-allowed  { color: var(--flow); background: rgba(79, 209, 197, 0.1); }
+.decision-refused  { color: var(--grain); background: var(--grain-wash); }
+.decision-denied   { color: var(--text); background: var(--lit); }
+.decision-compiled { color: var(--text-dim); background: var(--cast); }
+.decision-error    { color: #f08a8a; background: rgba(240, 138, 138, 0.1); }
+
+.record { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.record th {
+  text-align: left; font-weight: 600; color: var(--text-dim);
+  font-size: 0.75rem; padding: 0 0.7rem 0.6rem; border-bottom: 1px solid var(--line);
+}
+.record td { padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--cast); vertical-align: top; }
+.record tr:last-child td { border-bottom: 0; }
+.record .num { text-align: right; font-variant-numeric: tabular-nums; }
+.tiny { font-family: var(--mono); font-size: 0.75rem; color: var(--text-dim); }
+/* The code sits beside the decision badge and needs air, or the two read
+   as one word. */
+.decision + .tiny { margin-left: 0.45rem; }
+
+.caller-filter { display: flex; align-items: center; gap: 0.6rem; margin-bottom: var(--gap); }
+.caller-filter select {
+  background: var(--cast); color: var(--text); border: 1px solid var(--edge);
+  border-radius: 8px; padding: 0.35rem 0.6rem; font: inherit; font-size: 0.85rem;
+}
+
+.total { text-align: center; }
+.figure {
+  font-size: 2.6rem; font-variant-numeric: tabular-nums;
+  color: var(--flow); margin: 0 0 0.3rem;
+}
+
+/* A bar per row, because the question is which one is the outlier and a
+   column of numbers makes that a reading exercise. */
+.bars { list-style: none; padding: 0; margin: 0; }
+.bars li + li { margin-top: 1rem; }
+.bar-label {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 1rem; margin-bottom: 0.35rem; flex-wrap: wrap;
+}
+.bar-track { height: 8px; background: var(--cast); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--flow); border-radius: 4px; }
+
+.page-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap;
+}
+.page-head h1 { margin-bottom: 0; }
+.refresh { font-size: 0.8rem; padding: 0.35rem 0.8rem; }
+.refresh:disabled { opacity: 0.55; cursor: default; }

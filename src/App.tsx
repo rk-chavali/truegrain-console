@@ -4,6 +4,9 @@ import { Bar } from "./components/Bar";
 import { Explore } from "./pages/Explore";
 import { Model } from "./pages/Model";
 import { Governance } from "./pages/Governance";
+import { Refusals } from "./pages/Refusals";
+import { Activity } from "./pages/Activity";
+import { Spend } from "./pages/Spend";
 import { Connect } from "./pages/Connect";
 import { Docs } from "./pages/Docs";
 
@@ -16,6 +19,9 @@ export function App() {
         <Route path="/explore" element={<Explore />} />
         <Route path="/model" element={<Model />} />
         <Route path="/governance" element={<Governance />} />
+        <Route path="/refusals" element={<Refusals />} />
+        <Route path="/activity" element={<Activity />} />
+        <Route path="/spend" element={<Spend />} />
         <Route path="/connect" element={<Connect />} />
         <Route path="/docs" element={<Docs />} />
         <Route path="/docs/:slug" element={<Docs />} />

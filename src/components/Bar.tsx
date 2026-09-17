@@ -2,10 +2,10 @@
  * The bar carries the two things every page depends on: where you are, and
  * which engine you are talking to as whom.
  *
- * The rule in the middle of the navigation is information rather than
- * decoration. Sections to its left need a running engine; sections to its
- * right work with nothing running at all, which is what you want to know when
- * the engine is the thing that is broken.
+ * The two rules in the navigation are information rather than decoration.
+ * They split it into what the engine is, what it did, and how to use it. The
+ * last group works with nothing running at all, which is what you want to
+ * know when the engine is the thing that is broken.
  */
 
 import { useState } from "react";
@@ -37,6 +37,14 @@ export function Bar() {
           <NavLink to="/explore" data-offline={String(!usable)}>Explore</NavLink>
           <NavLink to="/model" data-offline={String(!usable)}>Model</NavLink>
           <NavLink to="/governance" data-offline={String(!engine.live)}>Governance</NavLink>
+          <span className="rule" aria-hidden="true" />
+          {/* The second rule separates what the engine is from what it did.
+              Left of the first: the model and what is enforced. Between them:
+              the record of decisions. Right of the second: reference, which
+              works when the engine is the thing that is broken. */}
+          <NavLink to="/refusals" data-offline={String(!usable)}>Refusals</NavLink>
+          <NavLink to="/activity" data-offline={String(!usable)}>Activity</NavLink>
+          <NavLink to="/spend" data-offline={String(!usable)}>Spend</NavLink>
           <span className="rule" aria-hidden="true" />
           <NavLink to="/connect">Connect</NavLink>
           <NavLink to="/docs">Docs</NavLink>
