@@ -1,0 +1,39 @@
+name: CI
+
+# This is the screen somebody opens first when they are deciding whether to
+# trust the engine, and until now nothing checked that it builds.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  console:
+    name: Console
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Types
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      # The build is the artifact somebody serves, so a build that fails is the
+      # whole product failing rather than a detail. tsc -b runs again here as
+      # part of it, which is cheap and catches a project-reference break that
+      # a bare typecheck does not.
+      - name: Build
+        run: npm run build

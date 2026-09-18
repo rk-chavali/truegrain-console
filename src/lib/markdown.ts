@@ -18,6 +18,26 @@ export type Node =
   | { kind: "code"; text: string }
   | { kind: "table"; head: string[]; rows: string[][] };
 
+const BULLET = /^\s*([-*]|\d+\.)\s+/;
+const HEADING = /^(#{2,3})\s+(.*)$/;
+
+/** A table needs a header row and a divider row beneath it. */
+function startsTable(line: string, next: string | undefined): boolean {
+  return line.includes("|") && !!next && next.includes("-") && next.includes("|");
+}
+
+/**
+ * Does this line begin a block that a paragraph must not swallow?
+ *
+ * Markdown does not require a blank line before a list or a table, and nobody
+ * writing prose leaves one. Without this the bullets are absorbed into the
+ * paragraph above and render as one run-on sentence with stray hyphens in it,
+ * which is what `docs/04-deploying.md` did to its two deployment options.
+ */
+function startsBlock(line: string, next: string | undefined): boolean {
+  return line.startsWith("```") || HEADING.test(line) || BULLET.test(line) || startsTable(line, next);
+}
+
 export function parse(source: string): Node[] {
   const lines = source.replace(/\r\n/g, "\n").split("\n");
   const out: Node[] = [];
@@ -40,15 +60,14 @@ export function parse(source: string): Node[] {
       continue;
     }
 
-    const heading = /^(#{2,3})\s+(.*)$/.exec(line);
+    const heading = HEADING.exec(line);
     if (heading) {
       out.push({ kind: "heading", level: heading[1]!.length === 2 ? 2 : 3, text: heading[2]! });
       i++;
       continue;
     }
 
-    // A table needs a header row and a divider row beneath it.
-    if (line.includes("|") && lines[i + 1]?.includes("-") && lines[i + 1]?.includes("|")) {
+    if (startsTable(line, lines[i + 1])) {
       const cells = (row: string) =>
         row.split("|").map((c) => c.trim()).filter((c, n, all) => !(c === "" && (n === 0 || n === all.length - 1)));
       const head = cells(line);
@@ -59,20 +78,21 @@ export function parse(source: string): Node[] {
       continue;
     }
 
-    const bullet = /^\s*([-*]|\d+\.)\s+/.exec(line);
+    const bullet = BULLET.exec(line);
     if (bullet) {
       const ordered = /\d/.test(bullet[1]!);
       const items: string[] = [];
-      while (i < lines.length && /^\s*([-*]|\d+\.)\s+/.test(lines[i]!)) {
-        items.push(lines[i]!.replace(/^\s*([-*]|\d+\.)\s+/, ""));
+      while (i < lines.length && BULLET.test(lines[i]!)) {
+        items.push(lines[i]!.replace(BULLET, ""));
         i++;
       }
       out.push({ kind: "list", ordered, items });
       continue;
     }
 
-    const paragraph: string[] = [];
-    while (i < lines.length && lines[i]!.trim() !== "" && !lines[i]!.startsWith("```") && !/^#{2,3}\s/.test(lines[i]!)) {
+    const paragraph: string[] = [line];
+    i++;
+    while (i < lines.length && lines[i]!.trim() !== "" && !startsBlock(lines[i]!, lines[i + 1])) {
       paragraph.push(lines[i]!);
       i++;
     }
